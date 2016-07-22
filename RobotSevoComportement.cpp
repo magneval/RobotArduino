@@ -23,7 +23,7 @@
 #define maxLetter 0xF<<2
 #define servoStep (180/maxStep)
 
-Mouvement* mouvements[]={
+static Mouvement* mouvements[]={
   new Arret(),
   new Avancer('t', 1),
   new Avancer('b', -1),
@@ -34,7 +34,8 @@ Mouvement* mouvements[]={
   new Tourner('n', -1, 1 ),
   new Tourner('y', 1, 1 )
 };
-Mouvement* mouvement;
+Mouvement* mouvementCourrant;
+
 //Comportement* comportements[]={ };
 /*
 char dirs[]={
@@ -88,9 +89,9 @@ int pos = 0;    // variable to store the servo position
 void setup() 
 { 
   Serial.begin(9600);
-  mouvement=mouvements[0];
+  mouvementCourrant=mouvements[0];
   Position position= Position();
-  mouvement->enter(position);
+  mouvementCourrant->enter(position);
   /*
   headServo.attach(11);  // attaches the servo on pin 9 to the servo object 
    rightServo.attach(9);  // attaches the servo on pin 9 to the servo object 
@@ -113,7 +114,7 @@ void setup()
 void loop() 
 { 
  delay(100);
-  Position position=mouvement->update();
+  Position position=mouvementCourrant->update();
 
   Serial.println(position.toJson());
   /*
@@ -126,6 +127,25 @@ void loop()
   */
 } 
 
+
+void changeMouvement(char c) 
+{ 
+  Mouvement* mouvementPossible;
+    byte p = 0; 
+    byte mul=1;
+    for (int i=0;i<sizeof(mouvements);i++){
+      mouvementPossible=mouvements[i];
+      if(c==mouvementPossible->getLetter()){
+        Position position=mouvementCourrant->exit();
+        //Serial.print("Change at ");
+        Serial.println(position.toJson());
+        mouvementCourrant= mouvements[i];
+        mouvementCourrant->enter(position);
+      }
+    }
+
+} 
+
 /*
   SerialEvent occurs whenever a new data comes in the
  hardware serial RX.  This routine is run between each
@@ -135,18 +155,8 @@ void loop()
 void serialEvent() {
   while (Serial.available()) {
     // get the new byte:
-    char c = (char)Serial.read(); 
-    byte p = 0; 
-    byte mul=1;
-    for (int i=0;i<sizeof(mouvements);i++){
-      if(c==mouvements[i]->getLetter()){
-        Position position=mouvement->exit();
-        Serial.print("Change at ");
-        Serial.println(position.toJson());
-        mouvement= mouvements[i];
-        mouvement->enter(position);
-      }
-    }
+    char c = (char)Serial.read();
+    changeMouvement(c); 
   }
 }
 

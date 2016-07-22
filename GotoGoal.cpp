@@ -1,3 +1,4 @@
+/*
 #ifndef GotoGoal
 #define GotoGoal
 
@@ -14,3 +15,5 @@ class GotoGoal : public Comportement  {
 }
 
 #endif GotoGoal
+*/
+
